@@ -22,10 +22,17 @@ public class TopicoController {
     @Autowired
     private TopicoRepository topicoRepository;
 
+    @Autowired
+    private ValidadorTopico validadorTopico;
+
     @PostMapping
     public ResponseEntity<DatosRespuestaTopico> registrarTopico(@RequestBody @Valid DatosRegistroTopico datosRegistroTopico,
                                                                 UriComponentsBuilder uriComponentsBuilder){
-        Topico topico = topicoRepository.save(new Topico(datosRegistroTopico));
+        Topico topico = new Topico(datosRegistroTopico);
+        validadorTopico.validar(topico);
+        topico = topicoRepository.save(topico);
+
+
         DatosRespuestaTopico datosRespuestaTopico = new DatosRespuestaTopico(topico.getId(), topico.getTitulo(), topico.getMensaje(), topico.getFecha());
 
         URI url = uriComponentsBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
@@ -48,6 +55,8 @@ public class TopicoController {
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<DatosRespuestaTopico> actualizarTopico(@RequestBody DatosActualizarTopico datosActualizarTopico, @Valid @PathVariable Long id){
+
+        validadorTopico.validar(datosActualizarTopico.titulo(), datosActualizarTopico.mensaje());
         Topico topico = topicoRepository.getReferenceById(id);
         topico.actualizarDatos(datosActualizarTopico);
         DatosRespuestaTopico datosRespuestaTopico = new DatosRespuestaTopico(topico.getId(), topico.getTitulo(), topico.getMensaje(), topico.getFecha());
